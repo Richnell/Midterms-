@@ -1,0 +1,253 @@
+game_inventory = {
+    "Donkey Kong": {"copies_available": 3, "cost": 2},
+    "Super Mario Bros": {"copies_available": 5, "cost": 3},
+    "Tetris": {"copies_available": 2, "cost": 1}
+}
+
+user_accounts = {}
+
+def display_available_games():
+    print("Available Games:")
+    for index, (game_title, game_info) in enumerate(game_inventory.items(), start=1):
+        print(f"{index}. {game_title} - Copies available: {game_info['copies_available']}, Cost: ${game_info['cost']}")
+
+def register_user():
+    while True:
+        try:
+            print("REGISTER PAGE")
+            print("Please input information")
+            username = input("Please input username: ")
+            password = input("Password (must be 8 characters long): ")
+            if len(password) >= 8:
+                print("Account registered successfully")
+                user_accounts[username] = {
+                    "username": username,
+                    "password": password,
+                    "balance": 0,
+                    "points": 0,
+                    "inventory": []
+                }
+                main_menu()
+            else:
+                print("Password must be at least 8 characters long")
+        except ValueError:
+            print("Wrong input")
+
+def user_login():
+    while True:
+        try:
+            print("LOGIN PAGE")
+            username = input("Username: ")
+            password = input("Password: ")
+            if username in user_accounts and user_accounts[username]["password"] == password:
+                print("Login Successful")
+                user_menu(username)
+                break
+            else:
+                print("Invalid username or password")
+        except ValueError:
+            print("Wrong input")
+
+def admin_login():
+    while True:
+        try:
+            print("ADMIN LOGIN PAGE")
+            admin = input("Username: ")
+            if admin == "admin":
+                adminpass = input("Password: ")
+                if adminpass == "adminpass":
+                    print("Login Successful")
+                    admin_menu()
+                    break
+                else:
+                    print("Incorrect password")
+            else:
+                print("Incorrect Username")
+        except ValueError:
+            print("Wrong input")
+
+def user_menu(username):
+    while True:
+        try:
+            print(f"Logged in as {username}")
+            print("1. Rent a game")
+            print("2. Return a game")
+            print("3. Top-up Account")
+            print("4. Display inventory")
+            print("5. Redeem free game rental")
+            print("6. Check Points")
+            print("7. Log out")
+
+            choice = input("Enter your choice: ")
+
+            if choice == "1":
+                rent_game(username)
+            elif choice == "2":
+                return_game(username)
+            elif choice == "3":
+                top_up(username)
+            elif choice == "4":
+                inventory(username)
+            elif choice == "5":
+                redeem(username)
+            elif choice == "6":
+                check_points(username)
+            elif choice == "7":
+                print("Logging out...Goodbye!")
+                main_menu()
+                break
+            else:
+                print("Please input a valid option")
+        except ValueError:
+            print("Wrong input")
+
+def admin_menu():
+    while True:
+        try:
+            print("Admin Menu") 
+            print("1. Update Game Details")
+            print("2. Log out")
+            
+            choice = input("Enter your choice: ")
+            
+            if choice == "1":
+                update_menu()
+            elif choice == "2":
+                print("Logging out...Goodbye!")
+                main_menu()
+                break
+            else:
+                print("Please input a valid option")
+        except ValueError:
+            print("Wrong input")
+
+def update_menu():
+    while True:
+        try:
+            print("Update Game ")
+            print("1. Update Game Copies")
+            print("2. Update Game Cost")
+            print("3. Back to Menu")
+            
+            choice = input("Enter your choice: ")
+            
+            if choice == "1":
+                update_game_copies()
+            elif choice == "2":
+                update_game_cost()
+            elif choice == "3":
+                admin_menu()
+                break
+            else:
+                print("Please input a valid option")
+        except ValueError:
+            print("Wrong input")
+
+def update_game_copies():
+    display_available_games()
+    game_choice = int(input("Select a game to update copies: "))
+    if game_choice in range(1, len(game_inventory) + 1):
+        game_name = list(game_inventory.keys())[game_choice - 1]
+        new_copies = int(input(f"Enter new number of copies for {game_name}: "))
+        game_inventory[game_name]["copies_available"] = new_copies
+        print(f"{game_name} copies updated successfully.")
+    else:
+        print("Invalid game choice.")
+
+def update_game_cost():
+    display_available_games()
+    game_choice = int(input("Select a game to update cost: "))
+    if game_choice in range(1, len(game_inventory) + 1):
+        game_name = list(game_inventory.keys())[game_choice - 1]
+        new_cost = int(input(f"Enter new cost for {game_name}: "))
+        game_inventory[game_name]["cost"] = new_cost
+        print(f"{game_name} cost updated successfully.")
+    else:
+        print("Invalid game choice.")
+
+def top_up(username):
+    while True:
+        try:
+            amount = float(input("Enter the amount you want to top up: $"))
+            if amount > 0:
+                user_accounts[username]["balance"] += amount
+                print(f"Top-up successful. New balance: ${user_accounts[username]['balance']}")
+                break
+            else:
+                print("Please enter a positive amount to top up.")
+        except ValueError:
+            print("Invalid input. Please enter a valid amount.")
+
+def rent_game(username):
+    display_available_games()
+    game_choice = int(input("Please select a game to rent: "))
+    if game_choice in range(1, len(game_inventory) + 1):
+        game_name = list(game_inventory.keys())[game_choice - 1]
+        if game_inventory[game_name]["copies_available"] > 0:
+            game_cost = game_inventory[game_name]["cost"]
+            if user_accounts[username]["balance"] >= game_cost:
+                print(f"{game_name} rented successfully.")
+                game_inventory[game_name]["copies_available"] -= 1
+                user_accounts[username]["inventory"].append(game_name)
+                user_accounts[username]["balance"] -= game_cost
+                user_accounts[username]["points"] += int(game_cost / 2) 
+                return
+            else:
+                print("Insufficient balance. Please top up your account to rent this game.")
+        else:
+            print("Sorry, no copies available for renting.")
+    else:
+        print("Invalid game choice.")
+
+def inventory(username):
+    print(f"Inventory for {username}:")
+    for game in user_accounts[username]["inventory"]:
+        print(game)
+def redeem(username):
+    points_needed = 3
+    if user_accounts[username]["points"] >= points_needed:
+        user_accounts[username]["points"] -= points_needed
+        print("Free game rental redeemed successfully.")
+    else:
+        print(f"You need {points_needed} points to redeem a free game rental.")
+
+def check_points(username):
+    print(f"Points for {username}: {user_accounts[username]['points']}")
+
+def return_game(username):
+    inventory(username)
+    game_choice = int(input("Select a game to return: "))
+    if game_choice in range(1, len(user_accounts[username]["inventory"]) + 1):
+        game_name = user_accounts[username]["inventory"][game_choice - 1]
+        game_inventory[game_name]["copies_available"] += 1
+        user_accounts[username]["inventory"].remove(game_name)
+        print(f"{game_name} returned successfully.")
+    else:
+        print("Invalid game choice.")
+
+def main_menu():
+    while True:
+        try:
+            print("MAIN MENU")
+            print("1. Register")
+            print("2. Login")
+            print("3. Admin Login")
+            print("4. Exit")
+
+            choice = input("Enter your choice: ")
+
+            if choice == "1":
+                register_user()
+            elif choice == "2":
+                user_login()
+            elif choice == "3":
+                admin_login()
+            elif choice == "4":
+                print("Exiting program...Goodbye!")
+                break
+            else:
+                print("Please input a valid option")
+        except ValueError:
+            print("Wrong input")
+
+main_menu()
